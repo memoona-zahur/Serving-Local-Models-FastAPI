@@ -68,7 +68,7 @@ tests/test_app.py::TestHealthEndpoint::test_reports_hosted_fallback_when_ollama_
 14 passed in 0.71s
 ```
 
-Re-run with: `.venv/bin/python -m pytest tests/ -v`
+Re-run with: `python3 -m pytest tests/ -v`
 
 ## Requirement → delivery (complete mapping)
 

@@ -91,7 +91,7 @@ live evidence, PEFT/LoRA write-up, decisions, limitations.
 ## Tests (no real network, no real spend)
 
 ```bash
-python -m pytest tests/ -v
+python3 -m pytest tests/ -v
 ```
 
 Every test replaces the client with `unittest.mock.MagicMock` returning known
@@ -101,5 +101,5 @@ slow, brittle offline, and cost money on a hosted API.
 ## Verification
 
 ```bash
-python verify_project.py      # integrity audit: structure + tests + secrets-safe
+python3 verify_project.py      # integrity audit: structure + tests + secrets-safe
 ```
