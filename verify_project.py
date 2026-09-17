@@ -36,6 +36,11 @@ REQUIRED_FILES = [
 
 SECRET_PATTERNS = ["sk-", "sk-proj-", "gsk_"]
 
+# Files that legitimately contain key *patterns* as documentation/example text —
+# the auditor itself (it defines SECRET_PATTERNS) and .env.example (placeholder
+# documentation). Real secrets would be a full-length key, not documentation.
+DOCUMENTED_PATTERN_FILES = {Path(__file__).name, ".env.example"}
+
 
 def check(ok: bool, message: str) -> bool:
     flag = "PASS" if ok else "FAIL"
@@ -73,6 +78,8 @@ def main() -> int:
     leaked = []
     for f in tracked:
         if not Path(f).is_file():
+            continue
+        if Path(f).name in DOCUMENTED_PATTERN_FILES:
             continue
         try:
             content = (ROOT / f).read_text(errors="ignore")

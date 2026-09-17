@@ -43,7 +43,13 @@ def get_client(use_local: bool) -> OpenAI:
     )
 
 
-def ask_model(client: OpenAI, model: str, message: str) -> str:
+def ask_model(
+    client: OpenAI,
+    model: str,
+    message: str,
+    *,
+    max_tokens: int = 500,
+) -> str:
     """Send one user message to ``model`` through ``client`` and return the reply.
 
     This function is deliberately dumb: it builds the standard chat-completion
@@ -51,6 +57,12 @@ def ask_model(client: OpenAI, model: str, message: str) -> str:
     the first choice.  It has no idea whether ``client`` is Ollama on this
     machine, Groq's free tier, or OpenAI's production API.  One code path for
     every backend — that is the deliverable.
+
+    ``max_tokens`` is an optional guardrail (keyword-only, 500 default) added
+    to prevent runaway output on providers with free-tier TPM limits (Groq
+    enforces a 1000 OTPM cap; a 500 max_tokens keeps calls well within it).
+    The spec's positional signature ``ask_model(client, model, message)``
+    is preserved exactly.
 
     Errors are intentionally NOT caught here.  A real failure (server down,
     bad key, rate limit) must propagate to the caller untouched, so the
@@ -60,5 +72,6 @@ def ask_model(client: OpenAI, model: str, message: str) -> str:
     response = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": message}],
+        max_tokens=max_tokens,
     )
     return response.choices[0].message.content

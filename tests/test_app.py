@@ -51,6 +51,7 @@ class TestAskModelHappyPath:
         fake_client.chat.completions.create.assert_called_once_with(
             model="my-model",
             messages=[latest_message],
+            max_tokens=500,
         )
 
 

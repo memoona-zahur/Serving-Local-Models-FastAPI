@@ -21,6 +21,7 @@ Anything marked ⏳ is a genuine limitation that is documented, not hidden.
 - [x] `python -m pytest tests/ -v` → **8 passed** (see EVIDENCE_REPORT.md for full output)
 - [x] Import check passes; app route table includes both `/chat/*` endpoints
 - [x] Live curl against `/chat/local` returns a real model reply (evidence file saved)
+- [x] Live call against `/chat/hosted` returns a real Groq reply (evidence file saved)
 - [x] `/docs` responds HTTP 200
 - [x] `verify_project.py` integrity audit passes (structure + tests + secrets-safe)
 
@@ -47,6 +48,9 @@ Anything marked ⏳ is a genuine limitation that is documented, not hidden.
 
 - [x] Provider-agnostic hosted design — works with Groq **or** OpenAI via `.env`, no code
       change (the spec's own unifying idea taken one step further)
+- [x] `max_tokens=500` guardrail — keyword-only addition (spec's positional signature
+      `ask_model(client, model, message)` untouched) motivated by Groq's free-tier
+      OTPM cap discovered in live testing
 - [x] Adversarial tests beyond the lesson's happy/error pair (request-shape + swallow checks)
 - [x] Endpoint-level HTTP tests (shape + 422 + 502) in addition to the required unit tests
 - [x] `verify_project.py` — self-created integrity check, not just the given tests
@@ -61,14 +65,15 @@ Anything marked ⏳ is a genuine limitation that is documented, not hidden.
 
 ## Honest limitations (not hidden)
 
-1. **Hosted live verification pending key** — the `/chat/hosted` endpoint is fully built,
-   refactored, and contract-tested, but its live response requires a hosted API key
-   (Groq signup or OpenAI billing). ⏳ awaiting trainer decision / key.
+1. **Provider is Groq, not OpenAI itself** — trainer-approved free tier, same
+   OpenAI-compatible contract. Groq has free-tier OTPM rate limits (the reason
+   `ask_model` gained an optional `max_tokens=500` guardrail), which a high-QPS
+   caller would hit.
 2. **No real LoRA training loop** — laptop-infeasible per task note; explanation grounded in
    the Hugging Face reference instead.
 
 ## Final verdict
 
-All spec deliverables present and working except the single external dependency
-(a hosted API key), which is a manual account step, not a code gap. Tests all pass;
-live local path proven with real evidence; secrets handled from commit one.
+All spec deliverables present, working, and live-verified on both backends.
+Tests all pass; live local path and live hosted path both proven with real evidence;
+secrets handled from commit one.

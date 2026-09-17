@@ -14,7 +14,7 @@ an application does not know or care where the model actually runs.
 | Endpoint | Backend | Default model |
 |----------|---------|---------------|
 | `POST /chat/local` | Ollama on this machine (`localhost:11434/v1`) | `llama3.2:3b` |
-| `POST /chat/hosted` | Hosted OpenAI-compatible provider from `.env` | `llama-3.3-70b-versatile` (Groq) |
+| `POST /chat/hosted` | Hosted OpenAI-compatible provider from `.env` | `qwen/qwen3.8-27b` (Groq, approved) |
 
 Both take the same request body and return the same response shape:
 
@@ -76,6 +76,9 @@ curl -X POST http://localhost:8000/chat/hosted \
 ```
 
 Interactive docs: <http://localhost:8000/docs>
+
+**Read the full start-to-end story in [`REPORT.md`](REPORT.md)** — framing, architecture,
+live evidence, PEFT/LoRA write-up, decisions, limitations.
 
 ## API key safety (non-negotiable)
 

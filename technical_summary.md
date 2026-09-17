@@ -69,17 +69,12 @@ def ask_model(client, model, message):
 
 1. `/chat/local` was called live with `curl` against the real Ollama server —
    evidence saved in `evidence/chat_local_live.json`.
-2. Interactive docs (`/docs`) respond with HTTP 200.
-3. The test suite (which needs no backend at all) passes 8/8.
+2. `/chat/hosted` was called live against Groq's free tier (`qwen/qwen3.8-27b`) —
+   evidence saved in `evidence/chat_hosted_live.json`.
+3. Interactive docs (`/docs`) respond with HTTP 200.
+4. The test suite (which needs no backend at all) passes 8/8.
 
 ## What we could NOT do (and why)
-
-- **Live verification of `/chat/hosted` requires a hosted API key.** The hosted
-  path was designed, and its contract fully tested with mocks, but a paid/free
-  hosted key is a manual account-and-billing step. The moment a key is added to
-  `.env`, the live call is a one-line `curl` — no code change needed, by design.
-  → *Impact: hosted endpoint verified by contract, not by live traffic, until the
-  key is provided.*
 
 - **No real training loop for LoRA/PEFT was run.** Most laptops cannot train even a
   small model; the task explicitly stops at "explain the config." The written
@@ -87,17 +82,23 @@ def ask_model(client, model, message):
   reference rather than a local training run.
   → *Impact: understanding, not practice, for the fine-tuning side of today's topic.*
 
+- **The hosted provider is Groq (free tier), not OpenAI itself.** Trainer-approved:
+  the lesson is about the OpenAI-compatible contract, not the vendor. The only
+  consequence is Groq's free-tier OTPM rate cap, which was handled with an optional
+  `max_tokens=500` guardrail in `ask_model`.
+  → *Impact: same code path, real live evidence; a different `.env` swaps providers.*
+
 ## Key decisions and alternatives
 
 | Decision | Why this way | Why not the alternative |
 |----------|--------------|--------------------------|
-| Hosted provider read from `HOSTED_BASE_URL` / `HOSTED_API_KEY` env vars | The task's lesson is provider-agnostic; supports Groq (free) or OpenAI with **zero code change** | Hardcoding OpenAI means the code only ever works for one paid provider |
+| Hosted provider read from `HOSTED_BASE_URL` / `HOSTED_API_KEY` env vars | The task's lesson is provider-agnostic; supports Groq (free, trainer-approved) or OpenAI with **zero code change** | Hardcoding OpenAI means the code only ever works for one paid provider |
 | Errors propagate raw out of `ask_model` | The lesson's error-path test asserts the real exception (e.g. `ConnectionError`) reaches the caller | Wrapping errors in a custom exception hides the original type and would fail the spec's test |
 | Tests patch `app.main.get_client` with `MagicMock` | Tests the endpoint contract without a backend | A real (unpatched) call would hit the network and be non-deterministic |
 | `.env` added to `.gitignore` before first commit | A leaked key is billable and unrecoverable — ignoring it first makes a leak impossible | Adding `.gitignore` later risks an accidental commit history entry |
 
 ## Limitations summary
 
-- Hosted endpoint's live response depends on an account/billing step (human action).
-- Model latency/quality depends on the local machine (CPU-only here) or the provider's free tier rate limits.
+- Model latency/quality depends on the local machine (CPU-only here) or the provider's free tier rate limits (Groq OTPM cap).
 - Local model `llama3.2:3b` is a small model; it is suitable for demos, not production reasoning.
+- Provider is Groq rather than OpenAI itself (trainer-approved) — contract identical, billing-free.

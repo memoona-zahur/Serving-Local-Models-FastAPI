@@ -1,0 +1,22 @@
+# Fresh-run verification — 2026-09-17T13:55:24Z
+
+## pytest
+8 passed, 1 warning in 0.62s
+
+## verify_project.py
+== 1. Structure ==
+[PASS] all required files present (missing: none)
+
+== 2. Tests (no real backend needed) ==
+[PASS] pytest passes (8 passed, 1 warning in 0.61s)
+
+== 3. Secret safety ==
+[PASS] .env is listed in .gitignore
+[PASS] .env is NOT tracked by git (tracked .env files: none)
+[PASS] no secret-looking patterns in tracked files (found: none)
+
+== 4. Import + route registration ==
+[PASS] app imports and both endpoints registered (routes OK: /chat/hosted,/chat/local)
+
+== Summary ==
+6/6 checks passed
