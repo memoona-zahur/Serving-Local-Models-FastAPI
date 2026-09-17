@@ -71,26 +71,34 @@ def main() -> int:
     has_dotenv_ignore = ".env" in gitignore
     results.append(check(has_dotenv_ignore, ".env is listed in .gitignore"))
 
-    tracked = subprocess.run(
+    tracked_proc = subprocess.run(
         ["git", "ls-files"], capture_output=True, text=True, cwd=ROOT,
-    ).stdout.splitlines()
-    env_tracked = [f for f in tracked if Path(f).name == ".env"]
-    results.append(check(not env_tracked, f".env is NOT tracked by git (tracked .env files: {env_tracked or 'none'})"))
+    )
+    if tracked_proc.returncode != 0:
+        # Not inside a git repo: git ls-files produced nothing, so concluding
+        # ".env is not tracked / no secrets" would be a misleading PASS.
+        # Fail loudly instead, exactly as the landmine-reviewer suggested.
+        results.append(check(False, "not inside a git repository — git ls-files failed"))
+    else:
+        tracked = tracked_proc.stdout.splitlines()
 
-    leaked = []
-    for f in tracked:
-        if not Path(f).is_file():
-            continue
-        if Path(f).name in DOCUMENTED_PATTERN_FILES:
-            continue
-        try:
-            content = (ROOT / f).read_text(errors="ignore")
-        except Exception:
-            continue
-        for pat in SECRET_PATTERNS:
-            if pat in content and Path(f).suffix in (".py", ".md", ".env", ".json", ".txt"):
-                leaked.append(f"{f}: contains '{pat}' pattern")
-    results.append(check(not leaked, f"no secret-looking patterns in tracked files (found: {leaked or 'none'})"))
+        env_tracked = [f for f in tracked if Path(f).name == ".env"]
+        results.append(check(not env_tracked, f".env is NOT tracked by git (tracked .env files: {env_tracked or 'none'})"))
+
+        leaked = []
+        for f in tracked:
+            if not Path(f).is_file():
+                continue
+            if Path(f).name in DOCUMENTED_PATTERN_FILES:
+                continue
+            try:
+                content = (ROOT / f).read_text(errors="ignore")
+            except Exception:
+                continue
+            for pat in SECRET_PATTERNS:
+                if pat in content and Path(f).suffix in (".py", ".md", ".env", ".json", ".txt"):
+                    leaked.append(f"{f}: contains '{pat}' pattern")
+        results.append(check(not leaked, f"no secret-looking patterns in tracked files (found: {leaked or 'none'})"))
 
     print("\n== 4. Import + route registration ==")
     import_litmus = subprocess.run(

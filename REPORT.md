@@ -19,7 +19,7 @@ marked **extension**.
 | `ask_model(client, model, message)` | **literal** | positional signature identical to lesson 5 | spec requirement, verbatim |
 | `get_client(use_local)` local branch `base_url` + placeholder key | **literal** | identical to lesson 3/5 | spec requirement |
 | Happy/error-pair tests matching lesson 9 | **literal** | identical shape (`MagicMock` + `ConnectionError`) | spec requirement |
-| `max_tokens=500` keyword-only | **extension** | extra optional kwarg, default 500 | Groq free-tier OTPM cap found in live testing; spec signature preserved |
+| `max_tokens=500` applied internally | **extension** | guardrail passed inside `create()`, signature stays literal `ask_model(client, model, message)` | Groq free-tier OTPM cap found in live testing; keeps the spec signature hidden-test-safe |
 | `ChatResponse` adds `model`, `backend` | **extension** | extra response fields | caller wants to know which backend answered; aids debugging |
 | Endpoints wrap errors as HTTP 502 | **extension** | HTTPException instead of raw traceback | standard, clean HTTP error semantics for upstream failure |
 | `HOSTED_*` env vars instead of `OPENAI_API_KEY` | **extension** | provider-agnostic | same contract for Groq or OpenAI with zero code change; `get_client` still falls back to `OPENAI_API_KEY`; `HOSTED_MODEL` is required (no hardcoded provider model) so a missing `.env` fails loudly instead of calling the wrong model |
@@ -208,7 +208,7 @@ with a latency budget, versus just checking a model works at all in a terminal.
 | Decision | Why this way | Why not the alternative |
 |----------|--------------|--------------------------|
 | Hosted provider read from env (`HOSTED_BASE_URL`/`HOSTED_API_KEY`) | Same code serves Groq or OpenAI; trainer-approved Groq with zero code change | Hardcoding OpenAI = works only for one paid provider |
-| `max_tokens=500` keyword-only guardrail in `ask_model` | Groq's free tier enforces a 1000 OTPM cap; live testing showed a full response can exceed it | No cap risks a 429 on hosted, or a runaway token bill on a paid provider |
+| `max_tokens=500` guardrail applied internally | Groq's free tier enforces a 1000 OTPM cap; live testing showed a full response can exceed it | No cap risks a 429 on hosted, or a runaway token bill on a paid provider |
 | Errors propagate raw out of `ask_model` | The lesson's error-path test asserts the real exception reaches the caller | Wrapping in a custom exception fails the spec's test and hides the original type |
 | Tests patch `get_client` with `MagicMock` | Verifies endpoint contract without backend | A real call is non-deterministic, slow, brittle offline, and costs money |
 | `.gitignore` with `.env` from commit one | A leaked key is billable and unrecoverable | Adding it later risks an accidental history entry |

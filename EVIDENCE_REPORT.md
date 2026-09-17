@@ -8,7 +8,7 @@ a command, or a fresh recomputation — never by assertion alone.
 | # | Task | Delivered in | Evidence |
 |---|------|-------------|----------|
 | 1 | Build `/chat/local` wrapping an Ollama model, confirm with curl or /docs | `app/main.py` — `chat_local()` | `evidence/chat_local_live.json` (live curl, real reply, `backend:"ollama"`) + `/docs` HTTP 200 |
-| 2 | Get real hosted API access; key in `.env`, `.env` in `.gitignore` | `.gitignore` line 2; `.env.example` documents vars | `.gitignore` contains `.env` from **first commit**; `.env` is never created/committed with real values |
+| 2 | Get real hosted API access; key in `.env`, `.env` in `.gitignore` | `.gitignore` line 2; `.env.example` documents vars | `.gitignore` contains `.env` from **first commit**; the real `.env` exists only locally, is git-ignored, and was never committed or included in the submission |
 | 3 | Build `/chat/hosted` — same shape, hosted backend | `app/main.py` — `chat_hosted()` | `evidence/chat_hosted_live.json` (live call, Groq + `qwen/qwen3.8-27b`, `backend:"hosted"`) + mocked endpoint tests |
 | 3b | Bonus: `/health` + `/chat/auto` auto-routing | `app/main.py` | `evidence/health_live.json` + `evidence/chat_auto_live.json` (live: Ollama up → routes local) + 5 mocked auto-routing tests |
 | 4 | Refactor both endpoints onto one shared `ask_model(client, model, message)` | `app/model_client.py` — `ask_model`; both endpoints call it — zero duplicated model-calling logic | tests assert request shape; grep: both endpoints call `ask_model(get_client(...), ...)` |
@@ -68,6 +68,11 @@ tests/test_app.py::TestHealthEndpoint::test_reports_hosted_fallback_when_ollama_
 14 passed in 0.71s
 ```
 
+**Fresh-clone independence (landmine check):** the suite re-run with `.env`
+physically removed (simulating a clean checkout/submission) still passed all 14 —
+the autouse fixture pins `HOSTED_MODEL` inside the tests, so nothing depends on
+the developer's private `.env`.
+
 Re-run with: `python3 -m pytest tests/ -v`
 
 ## Requirement → delivery (complete mapping)
@@ -77,7 +82,7 @@ Re-run with: `python3 -m pytest tests/ -v`
 | Local and hosted endpoints both genuinely working | Local: live curl evidence + 200. Hosted: live call evidence via Groq (`qwen/qwen3.8-27b`) | Local ✅ / Hosted ✅ |
 | Shared function refactor — no duplicated model-calling logic | `model_client.ask_model` single source of truth; both endpoints delegate | ✅ |
 | API key handled safely (.env, .gitignore, never printed/committed) | `.env` git-ignored from commit 1; key read from env only; `.env.example` holds placeholders | ✅ |
-| Tests mock the client, cover happy + error path | 13 mocked tests including error propagation + 502 + auto-routing | ✅ |
+| Tests mock the client, cover happy + error path | 14 mocked tests including error propagation + 502 + auto-routing | ✅ |
 
 ## Honest limitation
 

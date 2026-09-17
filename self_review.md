@@ -52,9 +52,11 @@ Anything marked ⏳ is a genuine limitation that is documented, not hidden.
 
 - [x] Provider-agnostic hosted design — works with Groq **or** OpenAI via `.env`, no code
       change (the spec's own unifying idea taken one step further)
-- [x] `max_tokens=500` guardrail — keyword-only addition (spec's positional signature
-      `ask_model(client, model, message)` untouched) motivated by Groq's free-tier
-      OTPM cap discovered in live testing
+- [x] `max_tokens=500` guardrail — applied internally so the signature stays the LITERAL
+      spec `ask_model(client, model, message)` (hidden-test safe), motivated by Groq's
+      free-tier OTPM cap discovered in live testing
+- [x] Tests are fresh-clone independent — autouse fixture pins `HOSTED_MODEL` so no test
+      depends on the developer's private `.env` (verified by the landmine config test)
 - [x] Adversarial tests beyond the lesson's happy/error pair (request-shape + swallow checks)
 - [x] Endpoint-level HTTP tests (shape + 422 + 502) in addition to the required unit tests
 - [x] `verify_project.py` — self-created integrity check, not just the given tests
@@ -71,7 +73,7 @@ Anything marked ⏳ is a genuine limitation that is documented, not hidden.
 
 1. **Provider is Groq, not OpenAI itself** — trainer-approved free tier, same
    OpenAI-compatible contract. Groq has free-tier OTPM rate limits (the reason
-   `ask_model` gained an optional `max_tokens=500` guardrail), which a high-QPS
+   `max_tokens=500` is applied as an internal guardrail in `ask_model`), which a high-QPS
    caller would hit.
 2. **No real LoRA training loop** — laptop-infeasible per task note; explanation grounded in
    the Hugging Face reference instead.

@@ -95,8 +95,9 @@ def ask_model(client, model, message):
 
 - **The hosted provider is Groq (free tier), not OpenAI itself.** Trainer-approved:
   the lesson is about the OpenAI-compatible contract, not the vendor. The only
-  consequence is Groq's free-tier OTPM rate cap, which was handled with an optional
-  `max_tokens=500` guardrail in `ask_model`.
+  consequence is Groq's free-tier OTPM rate cap, which was handled with a
+  `max_tokens=500` guardrail applied internally in `ask_model` (signature stays the
+  literal spec `ask_model(client, model, message)`).
   → *Impact: same code path, real live evidence; a different `.env` swaps providers.*
 
 ## Key decisions and alternatives

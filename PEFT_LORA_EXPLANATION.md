@@ -16,7 +16,9 @@ module left out stays 100% frozen, so the count of trainable parameters and the 
 the adaptation both live or die on this list. Training is dramatically cheaper than a full
 fine-tune because the base model's billions of weights are frozen (only their gradients are
 skipped, so the optimizer never touches them) and we train just the few million parameters
-inside the low-rank adapters, which is what makes the whole thing fit on a laptop.
+inside the low-rank adapters — this dramatically reduces the memory and compute requirements
+and can make adaptation feasible on much smaller hardware than a full fine-tune, depending on
+model size and available GPU memory.
 
 ---
 
