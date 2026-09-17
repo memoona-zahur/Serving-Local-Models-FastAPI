@@ -90,7 +90,7 @@ and (b) the model name. That is the entire point of standardizing on one API con
 |------|---------|
 | `app/model_client.py` | `get_client(use_local)` picks local vs hosted; `ask_model` is the shared, backend-blind call |
 | `app/main.py` | FastAPI app: `POST /chat/local`, `POST /chat/hosted`, same Pydantic contract |
-| `tests/test_app.py` | 8 tests, every external call mocked |
+| `tests/test_app.py` | 13 tests, every external call mocked |
 | `.env.example` | documented env variables (no real secrets) |
 | `PEFT_LORA_EXPLANATION.md` | the written LoRA/PEFT deliverable |
 
@@ -126,7 +126,7 @@ between them.
 ### 4.3 The test suite — no real backend, no spend
 
 ```
-8 passed
+13 passed
 ```
 
 Every test replaces the client with `unittest.mock.MagicMock`, so the suite needs no
@@ -235,4 +235,4 @@ with a latency budget, versus just checking a model works at all in a terminal.
 | Real key stored safely (`.env`, `.gitignore` from the start) | `.gitignore`; `.env` (untracked) | `verify_project.py` secret-safety checks |
 | Refactor into one shared `ask_model(client, model, message)` | `app/model_client.py`; both endpoints delegate | grep both endpoints; tests assert the call |
 | Written PEFT/LoRA explanation (`r`, `target_modules`, why cheap) | `PEFT_LORA_EXPLANATION.md` + §6 above | document exists |
-| Tests mocking the client — happy + error path, no real calls | `tests/test_app.py` — 8 tests | `pytest` 8 passed; all via `MagicMock` |
+| Tests mocking the client — happy + error path, no real calls | `tests/test_app.py` — 13 tests | `pytest` 13 passed; all via `MagicMock` |

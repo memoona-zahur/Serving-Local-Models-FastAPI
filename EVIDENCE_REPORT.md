@@ -13,7 +13,7 @@ a command, or a fresh recomputation — never by assertion alone.
 | 3b | Bonus: `/health` + `/chat/auto` auto-routing | `app/main.py` | `evidence/health_live.json` + `evidence/chat_auto_live.json` (live: Ollama up → routes local) + 5 mocked auto-routing tests |
 | 4 | Refactor both endpoints onto one shared `ask_model(client, model, message)` | `app/model_client.py` — `ask_model`; both endpoints call it — zero duplicated model-calling logic | tests assert request shape; grep: both endpoints call `ask_model(get_client(...), ...)` |
 | 5 | Read LoRA guide; write explanation of `r`, `target_modules`, why LoRA is cheap | `PEFT_LORA_EXPLANATION.md` | source: Hugging Face LoRA conceptual guide (fetched; `r` = rank, `target_modules` = injection layers, frozen base) |
-| 6 | Tests: happy + error path for `ask_model`, mocking the client, no real calls | `tests/test_app.py` — 8 tests | `pytest` 8 passed, 0 network — all via `unittest.mock.MagicMock` |
+| 6 | Tests: happy + error path for `ask_model`, mocking the client, no real calls | `tests/test_app.py` — 13 tests | `pytest` 13 passed, 0 network — all via `unittest.mock.MagicMock` |
 
 ## Live verification runs
 
