@@ -28,10 +28,19 @@ client code path covers them all.
 ## 2. The core idea — one contract, two backends
 
 Ollama exposes an OpenAI-compatible surface at `http://localhost:11434/v1` (the same
-request/response shape as `POST https://api.openai.com/v1/chat/completions`). Groq does
-the same at `https://api.groq.com/openai/v1`. The official `openai` Python package works
-against any of them — you only change `base_url` (+ `api_key` is any placeholder for a
-local server that doesn't check it).
+request/response shape as `POST https://api.openai.com/v1/chat/completions`). LM Studio
+does the same at `http://localhost:1234/v1` once its local server is started. Groq does
+the same in the cloud at `https://api.groq.com/openai/v1`. The official `openai` Python
+package works against any of them — you only change `base_url` (+ `api_key` is any
+placeholder for a local server that doesn't check it).
+
+**Mechanically why this works:** the OpenAI Python client is just an HTTP client that
+sends a `POST` to `{base_url}/chat/completions` with a specific JSON schema and parses
+back the same JSON response shape. It does not care *who* implements that shape — Ollama
+on your laptop, LM Studio, or a cloud provider. Three things must be true: (1) the
+server is reachable at the `base_url`, (2) it accepts the OpenAI chat-completions wire
+format, and (3) it accepts a key header (any non-empty string for local servers, which
+don't validate it).
 
 ```
               ┌────────────────────────────────────────────────────────────┐
@@ -149,6 +158,13 @@ How the three concepts relate (also from the lessons): **quantization** shrinks 
 already-trained model so it runs cheaply; **LoRA** and **PEFT** shrink the cost of
 *adapting* a model in the first place.
 
+Quantization revisited in a serving context (lesson 6): the quantization tag you pull
+Monday (`q4_K_M`) directly trades off against latency once you are serving real requests.
+A more aggressively quantized model responds faster and fits in less RAM — a meaningful
+difference when you have a latency budget for incoming HTTP calls — at some cost to
+output quality. That tradeoff matters differently once you are serving production requests
+with a latency budget, versus just checking a model works at all in a terminal.
+
 ## 7. Decisions and alternatives (why, not just what)
 
 | Decision | Why this way | Why not the alternative |
@@ -158,6 +174,8 @@ already-trained model so it runs cheaply; **LoRA** and **PEFT** shrink the cost 
 | Errors propagate raw out of `ask_model` | The lesson's error-path test asserts the real exception reaches the caller | Wrapping in a custom exception fails the spec's test and hides the original type |
 | Tests patch `get_client` with `MagicMock` | Verifies endpoint contract without backend | A real call is non-deterministic, slow, brittle offline, and costs money |
 | `.gitignore` with `.env` from commit one | A leaked key is billable and unrecoverable | Adding it later risks an accidental history entry |
+| `ChatResponse` adds `model` and `backend` fields | Shows which backend answered (critical for debugging); `reply` is not enough | Strictly only `reply` per lesson 3 — but returning which backend answered is standard practice and aids debugging; does not break the contract |
+| Endpoints wrap errors as HTTP 502 | Callers see a clean error, not a Python traceback; standard HTTP error semantics for upstream failure | Lesson 3's minimal code lets the error propagate raw — but in a real service a 502 is more useful |
 | Single `main` branch | Explicitly agreed for this task | n/a (feature branch waived) |
 
 ## 8. Honest limitations

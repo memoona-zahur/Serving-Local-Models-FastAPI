@@ -63,7 +63,7 @@ def chat_local(payload: ChatRequest) -> ChatResponse:
 @app.post("/chat/hosted", response_model=ChatResponse)
 def chat_hosted(payload: ChatRequest) -> ChatResponse:
     """Ask the hosted model (Groq free tier by default, per .env)."""
-    model = os.getenv("HOSTED_MODEL", "llama-3.3-70b-versatile")
+    model = os.getenv("HOSTED_MODEL", "qwen/qwen3.8-27b")
     try:
         return ChatResponse(
             model=model,

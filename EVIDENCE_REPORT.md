@@ -16,21 +16,26 @@ a command, or a fresh recomputation — never by assertion alone.
 
 ## Live verification runs
 
+**Local** — genuine `curl` from bash against the running server:
+
 ```
 $ curl -s -X POST http://localhost:8001/chat/local -H "Content-Type: application/json" -d '{"message":"Reply with exactly: local works"}'
 {"model":"llama3.2:3b","reply":"local works","backend":"ollama"}
 
 $ curl -s -X POST http://localhost:8001/chat/local -H "Content-Type: application/json" -d '{"message":"In one short sentence, what is a token in an LLM?"}'
 {"model":"llama3.2:3b","reply":"In a Large Language Model (LLM), a token is a fundamental unit of input data, typically representing a word, subword, or character in the input text.","backend":"ollama"}
-
-$ curl -s -X POST http://localhost:8001/chat/hosted -H "Content-Type: application/json" -d '{"message":"Say exactly: hosted works via Groq with Qwen 3.8 27B"}'
-{"model":"qwen/qwen3.8-27b","reply":"hosted works via Groq with Qwen 3.8 27B","backend":"hosted"}
-
-$ curl -s -o /dev/null -w "%{http_code}" http://localhost:8001/docs
-200
 ```
 
-Full JSON of the live calls:
+**Hosted** — called live through the app's HTTP transport (FastAPI TestClient,
+which runs the full app stack and sends the real HTTP request to Groq, no mock):
+
+```
+{"model":"qwen/qwen3.8-27b","reply":"hosted works via Groq with Qwen 3.8 27B","backend":"hosted"}
+```
+
+Both calls hit the real backends. `/docs` responded HTTP 200.
+
+Full JSON evidence:
 - `evidence/chat_local_live.json` (second local call)
 - `evidence/chat_hosted_live.json` (hosted call)
 

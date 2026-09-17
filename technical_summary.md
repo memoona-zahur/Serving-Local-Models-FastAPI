@@ -29,10 +29,17 @@ your application. This is what the shared `ask_model` function achieves.
 
 Every backend in this project speaks OpenAI's *chat completions* protocol — the same
 wire format OpenAI's own servers use (`POST /v1/chat/completions`). Ollama happens to
-expose that exact protocol at `http://localhost:11434/v1`. So when you point the
-official `openai` Python library at that local address (instead of OpenAI's cloud),
-the library politely talks to your laptop. Same client. Same code. Different address
-in the `base_url`.
+expose that exact protocol at `http://localhost:11434/v1`. LM Studio does the same at
+`http://localhost:1234/v1` once its local server is started from the app. Groq exposes it
+in the cloud at `https://api.groq.com/openai/v1`. So when you point the
+official `openai` Python library at any of those addresses (instead of OpenAI's own
+cloud), the library politely talks wherever `base_url` points. Same client. Same code.
+Different address.
+
+Three things must be true about the server for the client to work against it:
+(1) it is reachable at the configured `base_url`; (2) it accepts the same JSON request
+and returns the same JSON response schema; (3) it accepts the key header without
+rejecting it (Ollama/LM Studio don't validate it at all).
 
 ```
 POST /chat/local   ->  client(base_url=localhost:11434/v1)  ->  ask_model -> Ollama
@@ -100,5 +107,6 @@ def ask_model(client, model, message):
 ## Limitations summary
 
 - Model latency/quality depends on the local machine (CPU-only here) or the provider's free tier rate limits (Groq OTPM cap).
+- The quantization level (`q4_K_M`) chosen Monday directly trades off in a serving context: more aggressive quantization means faster responses and less RAM, at some cost to output quality — a meaningful tradeoff when you have a latency budget for incoming HTTP calls, not just when checking a model works at all.
 - Local model `llama3.2:3b` is a small model; it is suitable for demos, not production reasoning.
 - Provider is Groq rather than OpenAI itself (trainer-approved) — contract identical, billing-free.
