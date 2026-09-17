@@ -1,0 +1,1 @@
+"""Pytest collection helper so `pytest` finds the app package."""

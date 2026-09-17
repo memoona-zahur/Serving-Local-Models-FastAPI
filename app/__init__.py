@@ -1,0 +1,1 @@
+"""app package — FastAPI service wrapping local and hosted LLM backends."""

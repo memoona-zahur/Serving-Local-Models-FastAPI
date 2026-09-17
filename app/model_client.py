@@ -1,0 +1,64 @@
+"""Shared model-calling layer.
+
+The whole point of today's exercise lives in this file: one function,
+`ask_model`, that does not know or care whether its client points at a
+model running on your own laptop or at a hosted cloud API.  The only
+things that differ between "local" and "hosted" are:
+
+  1. which *client object* is passed in, and
+  2. which *model name* is requested.
+
+Everything else — the request body shape, the response parsing, the error
+behaviour — is identical, because both backends speak OpenAI's API shape.
+"""
+
+import os
+
+from dotenv import load_dotenv
+from openai import OpenAI
+
+load_dotenv()
+
+
+def get_client(use_local: bool) -> OpenAI:
+    """Return an OpenAI-compatible client for local Ollama or a hosted API.
+
+    Local  -> Ollama's OpenAI-compatible surface (base_url + any placeholder key).
+    Hosted -> the provider configured in .env.  By default the OpenAI library
+              reads OPENAI_API_KEY from the environment and points at
+              https://api.openai.com/v1; because this project is provider
+              agnostic we pass an explicit base_url + key so the SAME code
+              works for Groq, OpenAI, or any compatible endpoint.
+    """
+    if use_local:
+        return OpenAI(
+            base_url=os.getenv("LOCAL_BASE_URL", "http://localhost:11434/v1"),
+            api_key=os.getenv("LOCAL_API_KEY", "ollama"),
+        )
+    return OpenAI(
+        base_url=os.getenv(
+            "HOSTED_BASE_URL", "https://api.openai.com/v1"
+        ),
+        api_key=os.getenv("HOSTED_API_KEY", os.getenv("OPENAI_API_KEY")),
+    )
+
+
+def ask_model(client: OpenAI, model: str, message: str) -> str:
+    """Send one user message to ``model`` through ``client`` and return the reply.
+
+    This function is deliberately dumb: it builds the standard chat-completion
+    request, hands it to whatever client it was given, and returns the text of
+    the first choice.  It has no idea whether ``client`` is Ollama on this
+    machine, Groq's free tier, or OpenAI's production API.  One code path for
+    every backend — that is the deliverable.
+
+    Errors are intentionally NOT caught here.  A real failure (server down,
+    bad key, rate limit) must propagate to the caller untouched, so the
+    endpoint layer can decide how to surface it — exactly the behaviour the
+    error-path test in the lesson asserts (ConnectionError propagates raw).
+    """
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": message}],
+    )
+    return response.choices[0].message.content
