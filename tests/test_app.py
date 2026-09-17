@@ -135,6 +135,17 @@ class TestChatHostedEndpoint:
 
         assert resp.status_code == 502  # surfaced as a clean HTTP error
 
+    def test_hosted_requires_model_from_env(self, monkeypatch):
+        """Provider-agnostic code must NOT hardcode a provider's model: no
+        HOSTED_MODEL -> clear 500 config error, not a silent wrong-model call.
+        """
+        monkeypatch.delenv("HOSTED_MODEL", raising=False)
+
+        resp = client.post("/chat/hosted", json={"message": "hi"})
+
+        assert resp.status_code == 500
+        assert "HOSTED_MODEL" in resp.json()["detail"]
+
 
 # ---------------------------------------------------------------------------
 # /chat/auto + /health — auto-routing bonus (probe mocked, no real network)

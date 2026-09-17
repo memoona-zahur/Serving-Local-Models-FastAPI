@@ -90,8 +90,21 @@ def chat_local(payload: ChatRequest) -> ChatResponse:
 
 @app.post("/chat/hosted", response_model=ChatResponse)
 def chat_hosted(payload: ChatRequest) -> ChatResponse:
-    """Ask the hosted model (Groq free tier by default, per .env)."""
-    model = os.getenv("HOSTED_MODEL", "qwen/qwen3.8-27b")
+    """Ask the hosted model. The model name is REQUIRED from .env, never assumed:
+
+    provider-agnostic code cannot pick a provider-specific default.  .env.example
+    documents both options (Option A: Groq -> qwen/qwen3.8-27b; Option B:
+    OpenAI -> gpt-4o-mini).
+    """
+    model = os.getenv("HOSTED_MODEL")
+    if not model:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "HOSTED_MODEL is not set. Add it to .env (see .env.example: "
+                "Groq -> qwen/qwen3.8-27b, OpenAI -> gpt-4o-mini)."
+            ),
+        )
     try:
         return ChatResponse(
             model=model,

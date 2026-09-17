@@ -63,7 +63,7 @@ def ask_model(client, model, message):
 - **`app/main.py`** — the FastAPI service. Two endpoints (`/chat/local`,
   `/chat/hosted`) that share the same request/response contract and both delegate to
   `ask_model`. If the backend fails, the endpoint turns the error into a clean HTTP 502.
-- **`tests/test_app.py`** — 13 tests. Every test replaces the real client with a
+- **`tests/test_app.py`** — 14 tests. Every test replaces the real client with a
   **fake** that returns a known, fixed answer, so the tests never touch a network, a
   running server, or spend money. They verify: (a) the happy path returns the reply,
   (b) the right request is actually built, (c) real errors propagate instead of being
@@ -83,7 +83,7 @@ def ask_model(client, model, message):
 3. The bonus auto-routing endpoint was called live — Ollama up → routed local;
    evidence in `evidence/health_live.json` and `evidence/chat_auto_live.json`.
 4. Interactive docs (`/docs`) respond with HTTP 200.
-5. The test suite (which needs no backend at all) passes 13/13.
+5. The test suite (which needs no backend at all) passes 14/14.
 
 ## What we could NOT do (and why)
 

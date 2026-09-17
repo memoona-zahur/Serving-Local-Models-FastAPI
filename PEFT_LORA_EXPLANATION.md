@@ -10,7 +10,7 @@ cheaper than a full fine-tune.*
 full weight matrix — it literally sets how many parameters the adapter gets to store per layer,
 so a small `r` (e.g. 4) means a tiny adapter with few trainable parameters and a cheap,
 underpowered adaptation, while a very large `r` approaches a full matrix update and erases
-most of the memory savings. `target_modules` controls *which* layers get these ad adapters
+most of the memory savings. `target_modules` controls *which* layers get these adapters
 injected at all — typically the attention projections like `q_proj` and `v_proj` — and any
 module left out stays 100% frozen, so the count of trainable parameters and the quality of
 the adaptation both live or die on this list. Training is dramatically cheaper than a full

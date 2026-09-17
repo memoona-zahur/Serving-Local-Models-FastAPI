@@ -2,7 +2,7 @@
 [PASS] all required files present (missing: none)
 
 == 2. Tests (no real backend needed) ==
-[PASS] pytest passes (13 passed, 1 warning in 0.66s)
+[PASS] pytest passes (14 passed, 1 warning in 0.75s)
 
 == 3. Secret safety ==
 [PASS] .env is listed in .gitignore

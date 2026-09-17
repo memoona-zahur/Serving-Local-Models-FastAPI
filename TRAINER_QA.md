@@ -38,7 +38,7 @@ endpoints, only two inputs differ:
   *encodes the address (base_url) and credentials*.
 - **`model`** — `llama3.2:3b` for local; `qwen/qwen3.8-27b` for hosted.
 
-The tiers that stay identical: the request shape, the parsing, the error behaviour.
+The things that stay identical: the request shape, the parsing, the error behaviour.
 So the honest one-liner: **only the destination (encoded in the client's `base_url`)
 and the model name vary — the code path is one and the same.**
 

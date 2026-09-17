@@ -19,7 +19,7 @@ Anything marked ⏳ is a genuine limitation that is documented, not hidden.
 
 ## Automated verification
 
-- [x] `python -m pytest tests/ -v` → **13 passed** (see EVIDENCE_REPORT.md for full output)
+- [x] `python -m pytest tests/ -v` → **14 passed** (see EVIDENCE_REPORT.md for full output)
 - [x] Import check passes; all four routes registered (`/chat/local`, `/chat/hosted`,
       `/chat/auto`, `/health`)
 - [x] Live curl against `/chat/local` returns a real model reply (evidence file saved)
@@ -31,10 +31,10 @@ Anything marked ⏳ is a genuine limitation that is documented, not hidden.
 ## Verify-before-write (number/fact discipline)
 
 - [x] Every number in docs is sourced from a live run/command, not hand-typed:
-      test count (13) from pytest output, HTTP statuses from curl, model names from
+      test count (14) from pytest output, HTTP statuses from curl, model names from
       `ollama list`
 - [x] Self-audit: EVIDENCE_REPORT quotes the actual pytest/curl outputs verbatim
-- [x] No markdown number drift — the doc files that state "13 passed" do so from the
+- [x] No markdown number drift — the doc files that state "14 passed" do so from the
       same recorded pytest output
 
 ## Completeness & adversarial pass (reviewer mode)
