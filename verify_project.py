@@ -24,6 +24,8 @@ REQUIRED_FILES = [
     ".env.example",
     "requirements.txt",
     "README.md",
+    "REPORT.md",
+    "TRAINER_QA.md",
     "technical_summary.md",
     "EVIDENCE_REPORT.md",
     "self_review.md",
@@ -94,15 +96,17 @@ def main() -> int:
     import_litmus = subprocess.run(
         [str(PYTHON), "-c", (
             "from app.main import app; "
-            "routes=[r.path for r in app.routes if r.path.startswith('/chat')]; "
-            "assert routes==['/chat/local','/chat/hosted'], routes; "
-            "print('routes OK: ' + ','.join(sorted(routes)))"
+            "routes=sorted(r.path for r in app.routes if r.path.startswith('/')); "
+            "required=['/chat/local','/chat/hosted','/chat/auto','/health']; "
+            "missing=[r for r in required if r not in routes]; "
+            "assert not missing, f'missing {missing}'; "
+            "print('routes OK: ' + ','.join(routes))"
         )],
         capture_output=True, text=True, cwd=ROOT,
     )
     ok = import_litmus.returncode == 0
     detail = import_litmus.stdout.strip() or import_litmus.stderr.strip()
-    results.append(check(ok, f"app imports and both endpoints registered ({detail})"))
+    results.append(check(ok, f"app imports and all four routes registered ({detail})"))
 
     print("\n== Summary ==")
     passed = sum(results)

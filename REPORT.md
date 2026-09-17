@@ -8,6 +8,23 @@ work, the written PEFT/LoRA explanation, and the honest limitations.
 
 ---
 
+## Deviation log (documented, not hidden)
+
+Every deviation from the lesson's minimal code is called out here, with the reasoning.
+Verified lines that match the lesson literally are marked **literal**; extended lines are
+marked **extension**.
+
+| Item | Type | What changed | Why |
+|------|------|--------------|-----|
+| `ask_model(client, model, message)` | **literal** | positional signature identical to lesson 5 | spec requirement, verbatim |
+| `get_client(use_local)` local branch `base_url` + placeholder key | **literal** | identical to lesson 3/5 | spec requirement |
+| Happy/error-pair tests matching lesson 9 | **literal** | identical shape (`MagicMock` + `ConnectionError`) | spec requirement |
+| `max_tokens=500` keyword-only | **extension** | extra optional kwarg, default 500 | Groq free-tier OTPM cap found in live testing; spec signature preserved |
+| `ChatResponse` adds `model`, `backend` | **extension** | extra response fields | caller wants to know which backend answered; aids debugging |
+| Endpoints wrap errors as HTTP 502 | **extension** | HTTPException instead of raw traceback | standard, clean HTTP error semantics for upstream failure |
+| `HOSTED_*` env vars instead of `OPENAI_API_KEY` | **extension** | provider-agnostic | same contract for Groq or OpenAI with zero code change; `get_client` still falls back to `OPENAI_API_KEY` |
+| `/chat/auto` + `/health` bonus endpoints | **extension** | beyond spec | the "swap the backend behind the contract" idea, made real (see §4.4) |
+
 ## 1. Framing (what today is about)
 
 Monday showed that a local model is a real file on disk that can be run command-by-command
@@ -123,10 +140,29 @@ adversarial tests catch failures that *look* correct:
 - Endpoint-level checks: response shape, Pydantic 422 on a bad body, clean 502 when the
   backend dies.
 
-### 4.4 Automated integrity audit
+### 4.4 Bonus — `/health` + `/chat/auto` (auto-routing, live verified)
+
+Lesson 1 says the whole point is "the freedom to swap what's generating the response
+behind the contract without touching every caller." Today's bonus makes that **real**:
+the service probes its own backends and routes `POST /chat/auto` to whichever is up.
+
+Live run (Ollama up, Groq up):
+
+```
+GET  /health  ->  {"status":"ok","ollama":true,"hosted":true,"auto_backend":"ollama"}
+POST /chat/auto  ->  {"model":"llama3.2:3b","reply":"Auto routing works.","backend":"ollama"}
+```
+
+Saved as `evidence/health_live.json` and `evidence/chat_auto_live.json`. When Ollama is
+down, the same endpoint falls back to hosted — proven by the mocked test
+`test_falls_back_to_hosted_when_local_is_down` (no real spend). The probe uses
+`GET {base_url}/models` (3s timeout) — part of the OpenAI surface both backends
+implement, and it costs no model tokens.
+
+### 4.5 Automated integrity audit
 
 `verify_project.py` runs a 6-check audit (structure, tests, `.env` git-ignored, `.env`
-untracked, no secret patterns in tracked files, both routes registered). Result:
+untracked, no secret patterns in tracked files, all four routes registered). Result:
 
 ```
 6/6 checks passed

@@ -15,6 +15,8 @@ an application does not know or care where the model actually runs.
 |----------|---------|---------------|
 | `POST /chat/local` | Ollama on this machine (`localhost:11434/v1`) | `llama3.2:3b` |
 | `POST /chat/hosted` | Hosted OpenAI-compatible provider from `.env` | `qwen/qwen3.8-27b` (Groq, approved) |
+| `POST /chat/auto` | **Auto-routes** to Ollama if up, else hosted | whichever is reachable |
+| `GET /health` | Reachability probe (free, no token spend) | `ollama` / `hosted` booleans |
 
 Both take the same request body and return the same response shape:
 
@@ -42,10 +44,10 @@ works because Ollama, Groq, and OpenAI all speak the same chat-completions API s
 
 ```
 app/
-  main.py          FastAPI app: POST /chat/local, POST /chat/hosted
-  model_client.py  get_client(use_local) + ask_model(client, model, message)
+  main.py          FastAPI app: /chat/local, /chat/hosted, /chat/auto, /health
+  model_client.py  get_client(use_local) + ask_model + server_up probe
 tests/
-  test_app.py      8 tests — every external call mocked, no network/spend
+  test_app.py      13 tests — every external call mocked, no network/spend
 evidence/          live curl outputs proving each endpoint works
 PEFT_LORA_EXPLANATION.md   task deliverable: LoRA r / target_modules write-up
 EVIDENCE_REPORT.md         task → evidence mapping

@@ -13,24 +13,28 @@ Anything marked ⏳ is a genuine limitation that is documented, not hidden.
 - [x] Alternative approaches considered — provider-agnostic env design vs hardcoded OpenAI
 - [x] Code clean; comments only where a "why" was non-obvious
 - [x] Edge cases handled — missing `message` field (422), backend failure (502), error
-      propagation tested
-- [x] Honest limitations documented — hosted live-call pending key; no real LoRA training run
+      propagation tested; auto-routing fallback (Ollama up / down) tested both ways
+- [x] Honest limitations documented — Groq (not OpenAI) as approved provider; no real LoRA
+      training run
 
 ## Automated verification
 
-- [x] `python -m pytest tests/ -v` → **8 passed** (see EVIDENCE_REPORT.md for full output)
-- [x] Import check passes; app route table includes both `/chat/*` endpoints
+- [x] `python -m pytest tests/ -v` → **13 passed** (see EVIDENCE_REPORT.md for full output)
+- [x] Import check passes; all four routes registered (`/chat/local`, `/chat/hosted`,
+      `/chat/auto`, `/health`)
 - [x] Live curl against `/chat/local` returns a real model reply (evidence file saved)
 - [x] Live call against `/chat/hosted` returns a real Groq reply (evidence file saved)
+- [x] Live calls against `/health` and `/chat/auto` verified auto-routing (evidence saved)
 - [x] `/docs` responds HTTP 200
 - [x] `verify_project.py` integrity audit passes (structure + tests + secrets-safe)
 
 ## Verify-before-write (number/fact discipline)
 
 - [x] Every number in docs is sourced from a live run/command, not hand-typed:
-      test count (8) from pytest output, HTTP statuses from curl, model names from `ollama list`
+      test count (13) from pytest output, HTTP statuses from curl, model names from
+      `ollama list`
 - [x] Self-audit: EVIDENCE_REPORT quotes the actual pytest/curl outputs verbatim
-- [x] No markdown number drift — the two doc files that state "8 passed" do so from the
+- [x] No markdown number drift — the doc files that state "13 passed" do so from the
       same recorded pytest output
 
 ## Completeness & adversarial pass (reviewer mode)

@@ -134,3 +134,80 @@ class TestChatHostedEndpoint:
             resp = client.post("/chat/hosted", json={"message": "hi"})
 
         assert resp.status_code == 502  # surfaced as a clean HTTP error
+
+
+# ---------------------------------------------------------------------------
+# /chat/auto + /health — auto-routing bonus (probe mocked, no real network)
+# ---------------------------------------------------------------------------
+
+class TestChatAutoEndpoint:
+    def test_routes_to_ollama_when_local_is_up(self):
+        fake_client = MagicMock()
+        fake_client.chat.completions.create.return_value.choices = [
+            MagicMock(message=MagicMock(content="auto local reply"))
+        ]
+
+        with patch("app.main.server_up", return_value=True), patch(
+            "app.main.get_client", return_value=fake_client
+        ):
+            resp = client.post("/chat/auto", json={"message": "hi"})
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["backend"] == "ollama"
+        assert body["reply"] == "auto local reply"
+
+    def test_falls_back_to_hosted_when_local_is_down(self):
+        fake_client = MagicMock()
+        fake_client.chat.completions.create.return_value.choices = [
+            MagicMock(message=MagicMock(content="auto hosted reply"))
+        ]
+
+        with patch("app.main.server_up", return_value=False), patch(
+            "app.main.get_client", return_value=fake_client
+        ):
+            resp = client.post("/chat/auto", json={"message": "hi"})
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["backend"] == "hosted"
+        assert body["reply"] == "auto hosted reply"
+
+    def test_probe_is_free_and_probes_local_only(self):
+        """Adversarial: /chat/auto must NOT send a real model request to probe —
+        when the local path wins, only the local client is ever created.
+        """
+        fake_client = MagicMock()
+        fake_client.chat.completions.create.return_value.choices = [
+            MagicMock(message=MagicMock(content="x"))
+        ]
+
+        with patch("app.main.server_up", return_value=True), patch(
+            "app.main.get_client", return_value=fake_client
+        ) as mock_get_client:
+            client.post("/chat/auto", json={"message": "hi"})
+
+        assert mock_get_client.call_count == 1
+        assert mock_get_client.call_args.kwargs["use_local"] is True
+
+
+class TestHealthEndpoint:
+    def test_reports_both_backends_with_mocked_probe(self):
+        with patch("app.main.server_up", side_effect=[True, True]):
+            resp = client.get("/health")
+
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["status"] == "ok"
+        assert body["ollama"] is True
+        assert body["hosted"] is True
+        assert body["auto_backend"] == "ollama"
+
+    def test_reports_hosted_fallback_when_ollama_down(self):
+        with patch("app.main.server_up", side_effect=[False, True]):
+            resp = client.get("/health")
+
+        body = resp.json()
+        assert body["ollama"] is False
+        assert body["hosted"] is True
+        assert body["auto_backend"] == "hosted"

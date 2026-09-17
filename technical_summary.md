@@ -58,16 +58,18 @@ def ask_model(client, model, message):
 
 - **`app/model_client.py`** — the shared pattern. `get_client(use_local)` decides
   whether you get a local or a hosted client; `ask_model` is the single, backend-blind
-  function that does the actual model call.
+  function that does the actual model call; `server_up(base_url, key)` is a free
+  reachability probe (`GET /models`, 3s timeout) that powers auto-routing.
 - **`app/main.py`** — the FastAPI service. Two endpoints (`/chat/local`,
   `/chat/hosted`) that share the same request/response contract and both delegate to
   `ask_model`. If the backend fails, the endpoint turns the error into a clean HTTP 502.
-- **`tests/test_app.py`** — 8 tests. Every test replaces the real client with a
+- **`tests/test_app.py`** — 13 tests. Every test replaces the real client with a
   **fake** that returns a known, fixed answer, so the tests never touch a network, a
   running server, or spend money. They verify: (a) the happy path returns the reply,
   (b) the right request is actually built, (c) real errors propagate instead of being
   swallowed, (d) the endpoints return valid shapes, (e) validation errors and backend
-  failures produce correct HTTP status codes.
+  failures produce correct HTTP status codes, and (f) auto-routing probes are mocked
+  (free) and route local-vs-hosted correctly.
 - **`.env` / `.env.example`** — secrets handled safely. `.env` holds the real key
   and is git-ignored from the first commit; `.env.example` documents the variables
   with placeholder values.
@@ -78,8 +80,10 @@ def ask_model(client, model, message):
    evidence saved in `evidence/chat_local_live.json`.
 2. `/chat/hosted` was called live against Groq's free tier (`qwen/qwen3.8-27b`) —
    evidence saved in `evidence/chat_hosted_live.json`.
-3. Interactive docs (`/docs`) respond with HTTP 200.
-4. The test suite (which needs no backend at all) passes 8/8.
+3. The bonus auto-routing endpoint was called live — Ollama up → routed local;
+   evidence in `evidence/health_live.json` and `evidence/chat_auto_live.json`.
+4. Interactive docs (`/docs`) respond with HTTP 200.
+5. The test suite (which needs no backend at all) passes 13/13.
 
 ## What we could NOT do (and why)
 

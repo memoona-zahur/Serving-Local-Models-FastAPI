@@ -1,0 +1,6 @@
+{
+  "status": "ok",
+  "ollama": true,
+  "hosted": true,
+  "auto_backend": "ollama"
+}

@@ -14,10 +14,29 @@ behaviour — is identical, because both backends speak OpenAI's API shape.
 
 import os
 
+import httpx
 from dotenv import load_dotenv
 from openai import OpenAI
 
 load_dotenv()
+
+
+def server_up(base_url: str, api_key: str) -> bool:
+    """Cheap reachability probe: GET {base_url}/models with a short timeout.
+
+    Used by the /health and /chat/auto endpoints to decide which backend to use
+    without sending a billable model request.  /models is part of the OpenAI
+    API surface that both Ollama and hosted providers implement.
+    """
+    with httpx.Client(timeout=3.0) as client:
+        try:
+            response = client.get(
+                f"{base_url.rstrip('/')}/models",
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+            return response.status_code == 200
+        except (httpx.HTTPError, ValueError):
+            return False
 
 
 def get_client(use_local: bool) -> OpenAI:
